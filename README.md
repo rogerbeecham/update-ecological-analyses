@@ -1,5 +1,5 @@
 *Regionally-structured explanations behind area-level populism: An
-update to recent ecological analyses*
+update to recent ecological analyses* &middot; [![DOI](https://zenodo.org/badge/158826255.svg)](https://zenodo.org/badge/latestdoi/158826255)
 ================
 *Roger Beecham*
 
@@ -47,7 +47,7 @@ The following are available on CRAN and can be installed with
 `install.packages(<package_name>)`:
 
 ``` r
-library(tidyverse)              # bundle of packages for data manipulation 
+library(tidyverse)              # bundle of packages for data manipulation
 library(sf)                     # for working with geospatial data
 library(lme4)                   # for multilevel modelling
 library(piecewiseSEM)           # for multilevel modelling diagnostics
@@ -78,7 +78,7 @@ LADs in Great Britain only.
 brexit_data <- st_read("./data/brexit.geojson")
 
 # Sample LAD.
-# $ lad_code                  <chr> "E09000033" 
+# $ lad_code                  <chr> "E09000033"
 # $ lad_name                  <fct> Westminster
 # $ region_name               <chr> "London"
 # $ region_abbr               <chr> "Lon"
@@ -147,14 +147,14 @@ geographies.
 
 ``` r
 # Generate statistics summarising county-level population size.
-admin_geog <- trump_data %>% 
-  group_by(state_abbr) %>% 
+admin_geog <- trump_data %>%
+  group_by(state_abbr) %>%
   summarise(
     region=first(region), num_counties=n(), median_pop_size=median(total_pop), mean_pop=mean(total_pop),
-    lower=quantile(total_pop, 0.25), upper=quantile(total_pop, 0.75) ) %>% 
-  group_by(region) %>% 
-  mutate(median_region=median(median_pop_size)) %>% 
-  ungroup() %>% 
+    lower=quantile(total_pop, 0.25), upper=quantile(total_pop, 0.75) ) %>%
+  group_by(region) %>%
+  mutate(median_region=median(median_pop_size)) %>%
+  ungroup() %>%
   mutate(region=fct_relevel(reorder(region, -median_region)),
          binned_counties=ntile(num_counties,5)) %>%
   group_by(binned_counties) %>%
@@ -166,9 +166,9 @@ admin_geog <- trump_data %>%
 st_geometry(admin_geog) <- NULL
 
 # Generate statistics summarising LAD-level population size.
-admin_geog_temp <- brexit_data %>% 
+admin_geog_temp <- brexit_data %>%
   group_by(region_abbr) %>%
-  summarise(region="GB", num_counties=n(), median_pop_size=median(total_pop), mean_pop=mean(total_pop), lower=quantile(total_pop, 0.25), upper=quantile(total_pop, 0.75)) %>% 
+  summarise(region="GB", num_counties=n(), median_pop_size=median(total_pop), mean_pop=mean(total_pop), lower=quantile(total_pop, 0.25), upper=quantile(total_pop, 0.75)) %>%
   rename(state=region_abbr) %>%
   mutate(region=as_factor(region), median_region=0, binned_counties="", min_counties=0, max_counties=0)
 st_geometry(admin_geog_temp) <- NULL
@@ -188,7 +188,7 @@ admin_geog %>%
     scale_colour_distiller(palette="Greys",direction=1, name="Num counties/LADs", limits=c(-90,255))+
     theme(
       axis.title.x=element_blank(),
-      panel.grid=element_line(colour="#f0f0f0"), 
+      panel.grid=element_line(colour="#f0f0f0"),
       legend.position = c("bottom"),
       plot.title=element_text(face="plain", size=16),
       panel.spacing = unit(0, "inches")
@@ -254,9 +254,9 @@ regional scale and effects in the Brexit datasets.
 
 ``` r
 # Censor household income variable and standardise explanatory variables (for charting).
-brexit_multilevel <- brexit_data %>% 
+brexit_multilevel <- brexit_data %>%
   # Censor household income variable for City of London rather than remove entirely.
-  group_by(lad_name) %>% 
+  group_by(lad_name) %>%
   mutate(household_income=min(household_income,42000)) %>%
   ungroup() %>%
   # Standardise explanatory variables.
@@ -275,7 +275,7 @@ variances
 
 # Get fitted values from random intercept and slope model as well model diagnostics for each.
 # Diagnostics are duplicated amongst rows as each row is an observation + fitted values for charting.
-summary_fitted <- bind_rows(x_vars$var %>% 
+summary_fitted <- bind_rows(x_vars$var %>%
                               purrr::map_df(
                                 ~get_randoms_fitted(
                                   lmer_intercept(brexit_multilevel,quo(share_leave),.x, quo(region_abbr)),
@@ -287,24 +287,24 @@ summary_fitted <- bind_rows(x_vars$var %>%
 Plot multilevel Brexit models.
 
 ``` r
-# Create factor variable with variable theme for ordering and charting -- also used for plotting multivariate models. 
+# Create factor variable with variable theme for ordering and charting -- also used for plotting multivariate models.
 var_theme <- tibble(var=c("pop_density", "older_adults", "foreign_born","manufacturing_loss", "leisure_hospitality", "transport_trade_utilities","not_good_health", "household_income",  "degree_educated"),
                     short_var=c("p-d","old","for", "man", "lei", "trd", "ngh", "inc","deg"),
                     theme=c("urban-rural", "inflow","inflow", "industry","industry","industry","demographics","demographics","demographics"))  %>%
   mutate(var_label=as_factor(gsub("\\_", " ", var)))
 
 # Merge with data frame containing fitted values and model diagnostics.
-summary_fitted <- summary_fitted %>% left_join(var_theme, by=c("var_name"="var")) 
+summary_fitted <- summary_fitted %>% left_join(var_theme, by=c("var_name"="var"))
 
 # Create a data frame containing plot labels.  
 plot_labels <- summary_fitted %>%
   group_by(var_label) %>%
   summarise(plot_label=paste0("marginal ", round(first(marginal_slope),2),"\n conditional", round(first(conditional_slope),2)),
     xmin=min(var_values), x=max(var_values), y=0.15, likelihood=min(likelihood), corr=min(round(corr,2))) %>%
-  mutate(likelihood=ifelse(likelihood<0.001, paste0("p <0.001\ncor ", corr), 
+  mutate(likelihood=ifelse(likelihood<0.001, paste0("p <0.001\ncor ", corr),
                       ifelse(likelihood<0.01, paste0("p <0.01\ncor ", corr),
                              ifelse(likelihood<0.05, paste0("p <0.05\ncor ", corr),
-                                    paste0("\ncor ", corr))))) 
+                                    paste0("\ncor ", corr)))))
 
 # Generate plot
 summary_fitted %>%
@@ -319,7 +319,7 @@ summary_fitted %>%
   geom_text(data=plot_labels, hjust="right", vjust="centre",  size=2.5, alpha=0.9,  colour="#252525", aes(x=x, y=y, label=plot_label))+
   facet_wrap(~var_label, scales="free_x", nrow=2)+
   theme(
-    panel.grid=element_line(colour="#f0f0f0"), 
+    panel.grid=element_line(colour="#f0f0f0"),
     strip.text.x=element_text(angle=0, hjust=0),
     axis.text = element_blank(),
     axis.title=element_blank(),
@@ -337,7 +337,7 @@ Compute multilevel models and summary statistics.
 
 ``` r
 # Standardise explanatory variables.
-trump_multilevel <- trump_data %>% 
+trump_multilevel <- trump_data %>%
   mutate_at(vars(degree_educated:pop_density),funs((.-mean(., na.rm=TRUE))/sd(., na.rm=TRUE) ))
 st_geometry(trump_multilevel) <- NULL
 
@@ -357,7 +357,7 @@ variances_shift
 
 # Get fitted values from random intercept and slope model as well model diagnostics for each.
 # Net-Trump
-summary_fitted_net <- bind_rows(x_vars$var %>% 
+summary_fitted_net <- bind_rows(x_vars$var %>%
                               purrr::map_df(
                                 ~get_randoms_fitted(
                                   lmer_intercept(trump_multilevel,quo(net_trump),.x, quo(state_abbr)),
@@ -365,7 +365,7 @@ summary_fitted_net <- bind_rows(x_vars$var %>%
                                   trump_multilevel,quo(net_trump), .x, quo(state_abbr)))
                               )
 # Shift-Trump
-summary_fitted_shift <- bind_rows(x_vars$var %>% 
+summary_fitted_shift <- bind_rows(x_vars$var %>%
                               purrr::map_df(
                                 ~get_randoms_fitted(
                                   lmer_intercept(trump_multilevel,quo(shift_trump),.x, quo(state_abbr)),
@@ -384,26 +384,26 @@ var_theme <- tibble(var=c("pop_density", "older_adults", "foreign_born","manufac
   mutate(var_label=as_factor(gsub("\\_", " ", var)))
 
 # Merge with data frame containing fitted values and model diagnostics.
-summary_fitted_net <- summary_fitted_net %>% left_join(var_theme, by=c("var_name"="var")) 
-summary_fitted_shift <- summary_fitted_shift %>% left_join(var_theme, by=c("var_name"="var")) 
+summary_fitted_net <- summary_fitted_net %>% left_join(var_theme, by=c("var_name"="var"))
+summary_fitted_shift <- summary_fitted_shift %>% left_join(var_theme, by=c("var_name"="var"))
 
 # Create a data frame containing plot labels.  
 plot_labels_net <- summary_fitted_net %>%
   group_by(var_label) %>%
   summarise(plot_label=paste0("marginal ", round(first(marginal_slope),2),"\n conditional", round(first(conditional_slope),2)),
     xmin=min(var_values), x=max(var_values), y=-0.8, likelihood=min(likelihood), corr=min(round(corr,2))) %>%
-  mutate(likelihood=ifelse(likelihood<0.001, paste0("p <0.001\ncor ", corr), 
+  mutate(likelihood=ifelse(likelihood<0.001, paste0("p <0.001\ncor ", corr),
                       ifelse(likelihood<0.01, paste0("p <0.01\ncor ", corr),
                              ifelse(likelihood<0.05, paste0("p <0.05\ncor ", corr),
-                                    paste0("\ncor ", corr))))) 
+                                    paste0("\ncor ", corr)))))
 plot_labels_shift <- summary_fitted_shift %>%
   group_by(var_label) %>%
   summarise(plot_label=paste0("marginal ", round(first(marginal_slope),2),"\n conditional", round(first(conditional_slope),2)),
     xmin=min(var_values), x=max(var_values), y=-0.15, likelihood=min(likelihood), corr=min(round(corr,2))) %>%
-  mutate(likelihood=ifelse(likelihood<0.001, paste0("p <0.001\ncor ", corr), 
+  mutate(likelihood=ifelse(likelihood<0.001, paste0("p <0.001\ncor ", corr),
                       ifelse(likelihood<0.01, paste0("p <0.01\ncor ", corr),
                              ifelse(likelihood<0.05, paste0("p <0.05\ncor ", corr),
-                                    paste0("\ncor ", corr))))) 
+                                    paste0("\ncor ", corr)))))
 
 # Generate plot net-Trump
 summary_fitted_net %>%
@@ -417,7 +417,7 @@ summary_fitted_net %>%
   geom_text(data=plot_labels_net, hjust="right", vjust="centre",  size=2.5, alpha=0.9,  colour="#252525", aes(x=x, y=y, label=plot_label))+
   facet_wrap(~var_label, scales="free_x", nrow=2)+
   theme(
-    panel.grid=element_line(colour="#f0f0f0"), 
+    panel.grid=element_line(colour="#f0f0f0"),
     strip.text.x=element_text(angle=0, hjust=0),
     axis.text = element_blank(),
     axis.title=element_blank(),
@@ -437,7 +437,7 @@ summary_fitted_shift %>%
   geom_text(data=plot_labels_shift, hjust="right", vjust="centre",  size=2.5, alpha=0.9,  colour="#252525", aes(x=x, y=y, label=plot_label))+
   facet_wrap(~var_label, scales="free_x", nrow=2)+
   theme(
-    panel.grid=element_line(colour="#f0f0f0"), 
+    panel.grid=element_line(colour="#f0f0f0"),
     strip.text.x=element_text(angle=0, hjust=0),
     axis.text = element_blank(),
     axis.title=element_blank(),
@@ -522,14 +522,14 @@ our explanatory variables.
 
 ``` r
 # Create data frame of dummy variables and merge -- Brexit.
-temp <- brexit_data %>% 
+temp <- brexit_data %>%
   mutate(row_number=1:nrow(.)) %>%
-  select(lad_code, region_abbr, row_number) %>% 
+  select(lad_code, region_abbr, row_number) %>%
   spread(region_abbr,row_number) %>%
   mutate_at(vars(E:`Y&H`), funs(if_else(is.na(.),0,1)))
 st_geometry(temp) <- NULL
 brexit_data <- brexit_data %>% inner_join(temp) %>%
-  mutate(Eng=if_else(region_abbr=="Scot"|region_abbr=="W", 0,1)) %>% 
+  mutate(Eng=if_else(region_abbr=="Scot"|region_abbr=="W", 0,1)) %>%
   select(-c(E:NW,SE,SW,WM,`Y&H`))
 rm(temp)
 
@@ -540,17 +540,17 @@ global_data_brexit  <- brexit_data %>%
 st_geometry(global_data_brexit) <- NULL
 
 # Create data frame of dummy variables and merge -- Trump.
-temp <- trump_data %>% 
+temp <- trump_data %>%
   mutate(row_number=1:nrow(.)) %>%
-    select(county_code, division, row_number) %>% 
-     spread(division,row_number) %>% 
+    select(county_code, division, row_number) %>%
+     spread(division,row_number) %>%
      mutate_at(vars(`East North Central`:`West South Central`), funs(if_else(is.na(.),0,1)))
 st_geometry(temp) <- NULL
 trump_data  <- trump_data %>% inner_join(temp, by=c("county_code"="county_code"))
 rm(temp)
 
 # Z-score standardise (globabally for global models) -- Trump.
-global_data_trump  <- trump_data  %>% 
+global_data_trump  <- trump_data  %>%
   mutate_at(vars(net_trump, shift_trump, degree_educated:pop_density),
             funs((.-mean(., na.rm=TRUE))/sd(., na.rm=TRUE) ))
 st_geometry(global_data_trump) <- NULL
@@ -566,7 +566,7 @@ ridge_lasso <- c(0,0.25,0.5,0.75,1)
 x_vars <- global_data_brexit %>% select(degree_educated:pop_density) %>% gather() %>% group_by(key) %>% summarise() %>% rename(row=key)
 
 # No subnational controls -- Brexit.
-global_models_brexit <- bind_rows(ridge_lasso %>% 
+global_models_brexit <- bind_rows(ridge_lasso %>%
                                    purrr::map_df(
                                      ~do_penalised_bootstrap(global_data_brexit, "global", x_vars, quo(net_leave), quo(degree_educated), quo(pop_density),.x)
                                    )
@@ -588,13 +588,13 @@ rm(global_models_brexit_subnat_controls)
 x_vars <- global_data_trump %>% select(degree_educated:pop_density) %>% gather() %>% group_by(key) %>% summarise() %>% rename(row=key)
 
 # Net-Trump as outcome -- no subnational controls.
-global_models_trump <- bind_rows(ridge_lasso %>% 
+global_models_trump <- bind_rows(ridge_lasso %>%
                                    purrr::map_df(
                                      ~do_penalised_bootstrap(global_data_trump, "global", x_vars, quo(net_trump), quo(degree_educated), quo(pop_density),.x)
-                                   ) 
+                                   )
                        )
 # Shift-Trump as outcome -- no subnational controls.                    
-global_models_trump <- global_models_trump %>%  bind_rows(ridge_lasso %>% 
+global_models_trump <- global_models_trump %>%  bind_rows(ridge_lasso %>%
                                    purrr::map_df(
                                      ~do_penalised_bootstrap(global_data_trump, "global", x_vars, quo(shift_trump), quo(degree_educated), quo(pop_density),.x)
                                   )
@@ -623,7 +623,7 @@ rm(global_models_trump_subnat_controls)
 
 ``` r
 # Brexit
-# Create factor variable with variable theme for ordering and charting. 
+# Create factor variable with variable theme for ordering and charting.
 var_theme <- tibble(var=c("pop_density","manufacturing_loss","transport_trade_utilities","leisure_hospitality", "older_adults", "foreign_born", "not_good_health", "household_income", "degree_educated"),
                     short_var=c("p-d","man","trd","lei","old","for","ngh","inc","deg"),
                     theme=c("urban-rural","industry","industry","industry","inflow","inflow","demographics","demographics","demographics"))  %>%
@@ -633,8 +633,8 @@ var_theme <- tibble(var=c("pop_density","manufacturing_loss","transport_trade_ut
 global_models_brexit <- global_models_brexit %>% left_join(var_theme, by=c("row"="var")) %>% filter(!is.na(short_var))
 # Arrange by variable caegory.
 reorder_vars <- global_models_brexit  %>% filter(outcome=="shift_trump", ridge_lasso==0, subnat_controls==TRUE) %>% select(long_var, theme) %>%  arrange(long_var)   
-# Update for charting. 
-global_models_brexit <- global_models_brexit %>% 
+# Update for charting.
+global_models_brexit <- global_models_brexit %>%
   mutate(
          # Recode NA as 0, identify sign, and generate CI band from upper and lower bounds.
          observed=ifelse(is.na(observed),0,observed),
@@ -647,12 +647,12 @@ global_models_brexit <- global_models_brexit %>%
          is_effect = if_else(observed!=0,
                              if_else(observed<0,
                                      if_else(upper<0,1,0),
-                                     if_else(lower>0,1,0)),0)) %>% 
-  group_by(ridge_lasso, outcome, subnat_controls) %>% 
+                                     if_else(lower>0,1,0)),0)) %>%
+  group_by(ridge_lasso, outcome, subnat_controls) %>%
   mutate(
     # Recode as ordered factor, variable name column.
     row=forcats::fct_relevel(long_var, reorder_vars$long_var),
-    # We want to scale mappings to within-model effect sizes. 
+    # We want to scale mappings to within-model effect sizes.
     max_observed=max(abs(observed), na.rm=TRUE)) %>%
     ungroup() %>%
     group_by(outcome, subnat_controls) %>%
@@ -670,16 +670,16 @@ global_models_brexit <- global_models_brexit %>%
       overall_effect=mean(observed[observed!= 0]),
       coef_label_pos=ifelse(sum(is_effect>0) & overall_effect>0 & ridge_lasso == 0, gsub("\\_", " ",short_var), ""),
       coef_label_neg=ifelse(sum(is_effect>0) & overall_effect<0 & ridge_lasso == 0, gsub("\\_", " ",short_var), "")
-    ) %>% 
-    select(-label) 
-         
+    ) %>%
+    select(-label)
+
 # Plot
-global_models_brexit <- global_models_brexit %>% 
+global_models_brexit <- global_models_brexit %>%
   mutate(
     observed_pos=if_else(observed>0 & is_effect==1, map_scale(abs(observed),0, max_observed,0.2,1),0),
     observed_neg=if_else(observed<0 & is_effect==1, map_scale(abs(observed),0, max_observed,0.2,1),0)
   )
-global_models_brexit %>% 
+global_models_brexit %>%
   ggplot(aes(x=row,y=ridge_lasso))+
   geom_rect(aes(xmin="pop_density", xmax="degree_educated",ymin=-0.8,ymax=1.8), fill="#f0f0f0",colour="#f0f0f0", size=10)+
   geom_point(aes(x=row, y=ridge_lasso, colour=theme, alpha=observed_neg), pch=21, size=3, stroke=2)+
@@ -705,7 +705,7 @@ global_models_brexit %>%
   )
 
 # Trump
-# Create factor variable with variable theme for ordering and charting. 
+# Create factor variable with variable theme for ordering and charting.
 var_theme <- tibble(var=c("pop_density","manufacturing_loss","transport_trade_utilities","leisure_hospitality", "older_adults", "foreign_born", "poverty", "household_income", "degree_educated"),
                     short_var=c("p-d","man","trd","lei","old","for","pov","inc","deg"),
                     theme=c("urban-rural","industry","industry","industry","inflow","inflow","demographics","demographics","demographics"))  %>%
@@ -715,8 +715,8 @@ var_theme <- tibble(var=c("pop_density","manufacturing_loss","transport_trade_ut
 global_models_trump <- global_models_trump %>% left_join(var_theme, by=c("row"="var")) %>% filter(!is.na(short_var))
 # Arrange by variable caegory.
 reorder_vars <- global_models_trump  %>% filter(outcome=="shift_trump", ridge_lasso==0, subnat_controls==TRUE) %>% select(long_var, theme) %>%  arrange(long_var)   
-# Update for charting. 
-global_models_trump <- global_models_trump %>% 
+# Update for charting.
+global_models_trump <- global_models_trump %>%
   mutate(
          # Recode NA as 0, identify sign, and generate CI band from upper and lower bounds.
          observed=ifelse(is.na(observed),0,observed),
@@ -729,12 +729,12 @@ global_models_trump <- global_models_trump %>%
          is_effect = if_else(observed!=0,
                              if_else(observed<0,
                                      if_else(upper<0,1,0),
-                                     if_else(lower>0,1,0)),0)) %>% 
-  group_by(ridge_lasso, outcome, subnat_controls) %>% 
+                                     if_else(lower>0,1,0)),0)) %>%
+  group_by(ridge_lasso, outcome, subnat_controls) %>%
   mutate(
     # Recode as ordered factor, variable name column.
     row=forcats::fct_relevel(long_var, reorder_vars$long_var),
-    # We want to scale mappings to within-model effect sizes. 
+    # We want to scale mappings to within-model effect sizes.
     max_observed=max(abs(observed), na.rm=TRUE)) %>%
     ungroup() %>%
     group_by(outcome, subnat_controls) %>%
@@ -752,16 +752,16 @@ global_models_trump <- global_models_trump %>%
       overall_effect=mean(observed[observed!= 0]),
       coef_label_pos=ifelse(sum(is_effect>0) & overall_effect>0 & ridge_lasso == 0, gsub("\\_", " ",short_var), ""),
       coef_label_neg=ifelse(sum(is_effect>0) & overall_effect<0 & ridge_lasso == 0, gsub("\\_", " ",short_var), "")
-    ) %>% 
-    select(-label) 
-         
+    ) %>%
+    select(-label)
+
 # Plot
-global_models_trump <- global_models_trump %>% 
+global_models_trump <- global_models_trump %>%
   mutate(
     observed_pos=if_else(observed>0 & is_effect==1, map_scale(abs(observed),0, max_observed,0.2,1),0),
     observed_neg=if_else(observed<0 & is_effect==1, map_scale(abs(observed),0, max_observed,0.2,1),0)
   )
-global_models_trump %>% 
+global_models_trump %>%
   ggplot(aes(x=row,y=ridge_lasso))+
   geom_rect(aes(xmin="pop_density", xmax="degree_educated",ymin=-0.8,ymax=1.8), fill="#f0f0f0",colour="#f0f0f0", size=10)+
   geom_point(aes(x=row, y=ridge_lasso, colour=theme, alpha=observed_neg), pch=21, size=3, stroke=2)+
@@ -813,19 +813,19 @@ region_data <- brexit_data %>%
   add_column(region_abbr=brexit_data %>% group_by(region_abbr) %>% summarise() %>% pull(region_abbr)) %>%
   add_column(num_lads=brexit_data %>% group_by(region_abbr) %>% summarise(num_lads=n()) %>% pull(num_lads)) %>%
   st_as_sf(coords = c("east", "north"), crs=27700) %>%
-  st_join(brexit_data %>% select(lad_name, row)) %>% 
+  st_join(brexit_data %>% select(lad_name, row)) %>%
   mutate(region_neighbours=purrr::map(region_abbr,~get_region_neighbours(brexit_data, .)))
 # Calculate centroids for each LAD.
-lad_centroids <- st_centroid(brexit_data) %>% st_coordinates() 
+lad_centroids <- st_centroid(brexit_data) %>% st_coordinates()
 # Find k nearest neighbours.
-neighbours <- spdep::knn2nb(spdep::knearneigh(lad_centroids, k=29)) 
+neighbours <- spdep::knn2nb(spdep::knearneigh(lad_centroids, k=29))
 # Add column.
 temp_brexit_data <- brexit_data
 temp_brexit_data$geog_neighbours <- neighbours
 st_geometry(temp_brexit_data) <- NULL
 st_geometry(region_data) <- NULL
 # Merge with region data.
-region_data <- region_data %>% 
+region_data <- region_data %>%
   inner_join(temp_brexit_data %>% select(row, geog_neighbours), by=c("row"="row")) %>%
   mutate(num_lads=purrr::map(.x=region_neighbours, ~length(.x))) %>%
   unnest(num_lads) %>%
@@ -838,7 +838,7 @@ region_data <- region_data %>% rename(central_lad=lad_name)
 st_geometry(brexit_data) <- NULL
 # Create data frame for storing regional models. Non-standardised regional data.
 regional_data_brexit <- brexit_data
-regional_models_brexit <- brexit_data %>% 
+regional_models_brexit <- brexit_data %>%
   select(degree_educated:pop_density, region_abbr) %>%
   gather(key="row", value, -region_abbr) %>%
   group_by(region_abbr,row) %>%
@@ -851,7 +851,7 @@ regions$region_abbr <- as.character(regions$region_abbr)
 x_vars_brexit <- regional_models_brexit %>% group_by(row) %>% summarise() %>% ungroup()
 
 # Trump
-# Identify counties to be 'borrowed' -- need 30 per state. 
+# Identify counties to be 'borrowed' -- need 30 per state.
 # CRS equal area : 2163
 trump_data <- st_transform(trump_data, crs=2163)
 trump_data <- trump_data %>% mutate(row=row_number())
@@ -862,19 +862,19 @@ state_data <- trump_data %>%
   add_column(state_abbr=trump_data %>% group_by(state_abbr) %>% summarise() %>% pull(state_abbr)) %>%
   add_column(num_counties=trump_data %>% group_by(state_abbr) %>% summarise(num_counties=n()) %>% pull(num_counties)) %>%
   st_as_sf(coords = c("lon", "lat"), crs=2163) %>%
-  st_join(trump_data %>% select(county_name, county_code, row)) %>% 
+  st_join(trump_data %>% select(county_name, county_code, row)) %>%
   mutate(state_neighbours=purrr::map(state_abbr,~get_state_neighbours(trump_data, .)))
 # Calculate centroids for each county.
-county_centroids <- st_centroid(trump_data) %>% st_coordinates() 
+county_centroids <- st_centroid(trump_data) %>% st_coordinates()
 # Find k nearest neighbours.
-neighbours <- spdep::knn2nb(spdep::knearneigh(county_centroids, k=29)) 
+neighbours <- spdep::knn2nb(spdep::knearneigh(county_centroids, k=29))
 # Add column to trump_analysis.
 temp_trump_data <- trump_data
 temp_trump_data$geog_neighbours <- neighbours
 st_geometry(temp_trump_data) <- NULL
 st_geometry(state_data) <- NULL
 # Merge with state data.
-state_data <- state_data %>% 
+state_data <- state_data %>%
   inner_join(temp_trump_data %>% select(row, geog_neighbours), by=c("row"="row")) %>%
   mutate(num_counties=purrr::map(.x=state_neighbours, ~length(.x))) %>%
   unnest(num_counties) %>%
@@ -887,7 +887,7 @@ state_data <- state_data %>% rename(central_county=county_name)
 st_geometry(trump_data) <- NULL
 # Create data frame for storing regional models. Non-standardised regional data.
 regional_data_trump <- trump_data
-regional_models_trump <- trump_data %>% 
+regional_models_trump <- trump_data %>%
   select(degree_educated:pop_density, state_abbr) %>%
   gather(key="row", value, -state_abbr) %>%
   group_by(state_abbr,row) %>%
@@ -913,12 +913,12 @@ get_data_transformed <- function(data, ids) {
 
 # Brexit
 # Populate data frame with regional models data.
-regions_iterator <- regions %>% 
+regions_iterator <- regions %>%
   select(region_abbr) %>%
-  mutate(ridge_lasso_0=0, ridge_lasso_25=0.25, ridge_lasso_5=0.5, ridge_lasso_75=0.75, ridge_lasso_1=1) %>% 
+  mutate(ridge_lasso_0=0, ridge_lasso_25=0.25, ridge_lasso_5=0.5, ridge_lasso_75=0.75, ridge_lasso_1=1) %>%
   gather(key="ridge_lasso",value="ridge_lasso_value",-region_abbr)
 # Net-Leave
-regional_models_brexit <- bind_rows( 
+regional_models_brexit <- bind_rows(
   purrr::map2_df(regions_iterator %>% pull(region_abbr), regions_iterator %>% pull(ridge_lasso_value),
                 ~do_penalised_bootstrap(get_data_transformed(brexit_data, region_data %>% filter(region_abbr==.x) %>% pull(neighbours) %>% unlist()),
                                 .x, x_vars_brexit, quo(net_leave), quo(degree_educated), quo(pop_density),.y)
@@ -927,19 +927,19 @@ regional_models_brexit <- bind_rows(
 
 # Trump
 # Populate data frame with regional models data.
-states_iterator <- states %>% 
+states_iterator <- states %>%
   select(state_abbr) %>%
-  mutate(ridge_lasso_0=0, ridge_lasso_25=0.25, ridge_lasso_5=0.5, ridge_lasso_75=0.75, ridge_lasso_1=1) %>% 
+  mutate(ridge_lasso_0=0, ridge_lasso_25=0.25, ridge_lasso_5=0.5, ridge_lasso_75=0.75, ridge_lasso_1=1) %>%
   gather(key="ridge_lasso",value="ridge_lasso_value",-state_abbr)
 # Net-Trump
-regional_models_trump <- bind_rows( 
+regional_models_trump <- bind_rows(
   purrr::map2_df(states_iterator %>% pull(state_abbr), states_iterator %>% pull(ridge_lasso_value),
                 ~do_penalised_bootstrap(get_data_transformed(trump_data, state_data %>% filter(state_abbr==.x) %>% pull(neighbours) %>% unlist()),
                                 .x, x_vars_trump, quo(net_trump), quo(degree_educated), quo(pop_density),.y)
                             )
 )
 # Shift-Trump
-regional_models_trump <- regional_models_trump  %>%  bind_rows( 
+regional_models_trump <- regional_models_trump  %>%  bind_rows(
   purrr::map2_df(states_iterator %>% pull(state_abbr), states_iterator %>% pull(ridge_lasso_value),
                  ~do_penalised_bootstrap(
                    get_data_transformed(trump_data, state_data %>% filter(state_abbr==.x) %>% pull(neighbours) %>% unlist()),
@@ -952,7 +952,7 @@ regional_models_trump <- regional_models_trump  %>%  bind_rows(
 
 ``` r
 # Brexit
-# Create factor variable with variable theme for ordering and charting. 
+# Create factor variable with variable theme for ordering and charting.
 var_theme <- tibble(var=c("pop_density","manufacturing_loss","transport_trade_utilities","leisure_hospitality", "older_adults", "foreign_born", "not_good_health", "household_income", "degree_educated"),
                     short_var=c("p-d","man","trd","lei","old","for","ngh","inc","deg"),
                     theme=c("urban-rural","industry","industry","industry","inflow","inflow","demographics","demographics","demographics"))  %>%
@@ -962,8 +962,8 @@ var_theme <- tibble(var=c("pop_density","manufacturing_loss","transport_trade_ut
 regional_models_brexit <- regional_models_brexit %>% left_join(var_theme, by=c("row"="var")) %>% filter(!is.na(short_var))
 # Arrange by variable category.
 reorder_vars <- regional_models_brexit  %>% filter(ridge_lasso==0, region=="Lon") %>% select(long_var, theme) %>%  arrange(long_var)   
-# Populate data frame with values for charting. 
-regional_models_brexit  <- regional_models_brexit %>% 
+# Populate data frame with values for charting.
+regional_models_brexit  <- regional_models_brexit %>%
   mutate(
     # Recode NA as 0, identify sign, and generate CI band from upper and lower bounds.
     observed=ifelse(is.na(observed),0,observed),
@@ -974,12 +974,12 @@ regional_models_brexit  <- regional_models_brexit %>%
     r2=if_else(r2<0,0,r2),
     num_lads=380,
     # If CI crosses 0, exclude.
-    is_effect = if_else(observed!=0, if_else(observed<0, if_else(upper<0,1,0), if_else(lower>0,1,0)),0)) %>% 
-  group_by(ridge_lasso, outcome, region) %>% 
+    is_effect = if_else(observed!=0, if_else(observed<0, if_else(upper<0,1,0), if_else(lower>0,1,0)),0)) %>%
+  group_by(ridge_lasso, outcome, region) %>%
   mutate(
     # Recode as ordered factor variaable name column.
     row=forcats::fct_relevel(long_var, reorder_vars$long_var),
-    # We want to scale mappings to within-model effect sizes. 
+    # We want to scale mappings to within-model effect sizes.
     max_observed=max(abs(observed), na.rm=TRUE)) %>%
   ungroup() %>%
   group_by(outcome, region) %>%
@@ -997,18 +997,18 @@ regional_models_brexit  <- regional_models_brexit %>%
     overall_effect=mean(observed[observed!= 0]),
     coef_label_pos=ifelse(sum(is_effect>0) & overall_effect>0 & ridge_lasso == 0, gsub("\\_", " ",short_var), ""),
     coef_label_neg=ifelse(sum(is_effect>0) & overall_effect<0 & ridge_lasso == 0, gsub("\\_", " ",short_var), "")
-  ) %>% 
+  ) %>%
   ungroup() %>%
-  select(-label) 
+  select(-label)
 # Merge in x,y grid positions.
 regional_models_brexit  <- regional_models_brexit %>%
-  left_join(brexit_data %>% 
-              select(region_abbr, gridX, gridY) %>% 
-              group_by(region_abbr) %>% summarise(x=first(gridX), y=first(gridY)) %>% ungroup(), 
+  left_join(brexit_data %>%
+              select(region_abbr, gridX, gridY) %>%
+              group_by(region_abbr) %>% summarise(x=first(gridX), y=first(gridY)) %>% ungroup(),
           by=c("region"="region_abbr"))  
 
 # Plot
-regional_models_brexit %>% 
+regional_models_brexit %>%
   mutate(
     observed_pos=if_else(observed>0 & is_effect==1, map_scale(abs(observed),0, max_observed,0.2,1),0),
     observed_neg=if_else(observed<0 & is_effect==1, map_scale(abs(observed),0, max_observed,0.2,1),0)
@@ -1040,7 +1040,7 @@ regional_models_brexit %>%
   labs(title="Net-Leave")
 
 # Trump
-# Create factor variable with variable theme for ordering and charting. 
+# Create factor variable with variable theme for ordering and charting.
 var_theme <- tibble(var=c("pop_density","manufacturing_loss","transport_trade_utilities","leisure_hospitality", "older_adults", "foreign_born", "poverty", "household_income", "degree_educated"),
                     short_var=c("p-d","man","trd","lei","old","for","pov","inc","deg"),
                     theme=c("urban-rural","industry","industry","industry","inflow","inflow","demographics","demographics","demographics"))  %>%
@@ -1050,8 +1050,8 @@ var_theme <- tibble(var=c("pop_density","manufacturing_loss","transport_trade_ut
 regional_models_trump <- regional_models_trump %>% left_join(var_theme, by=c("row"="var")) %>% filter(!is.na(short_var))
 # Arrange by variable category.
 reorder_vars <- regional_models_trump  %>% filter(outcome=="shift_trump", ridge_lasso==0, region=="NJ") %>% select(long_var, theme) %>%  arrange(long_var)   
-# Populate data frame with values for charting. 
-regional_models_trump  <- regional_models_trump %>% 
+# Populate data frame with values for charting.
+regional_models_trump  <- regional_models_trump %>%
   mutate(
     # Recode NA as 0, identify sign, and generate CI band from upper and lower bounds.
     observed=ifelse(is.na(observed),0,observed),
@@ -1062,12 +1062,12 @@ regional_models_trump  <- regional_models_trump %>%
     r2=if_else(r2<0,0,r2),
     num_counties=3108,
     # If CI crosses 0, exclude.
-    is_effect = if_else(observed!=0, if_else(observed<0, if_else(upper<0,1,0), if_else(lower>0,1,0)),0)) %>% 
-  group_by(ridge_lasso, outcome, region) %>% 
+    is_effect = if_else(observed!=0, if_else(observed<0, if_else(upper<0,1,0), if_else(lower>0,1,0)),0)) %>%
+  group_by(ridge_lasso, outcome, region) %>%
   mutate(
     # Recode as ordered factor variaable name column.
     row=forcats::fct_relevel(long_var, reorder_vars$long_var),
-    # We want to scale mappings to within-model effect sizes. 
+    # We want to scale mappings to within-model effect sizes.
     max_observed=max(abs(observed), na.rm=TRUE)) %>%
   ungroup() %>%
   group_by(outcome, region) %>%
@@ -1085,24 +1085,24 @@ regional_models_trump  <- regional_models_trump %>%
     overall_effect=mean(observed[observed!= 0]),
     coef_label_pos=ifelse(sum(is_effect>0) & overall_effect>0 & ridge_lasso == 0, gsub("\\_", " ",short_var), ""),
     coef_label_neg=ifelse(sum(is_effect>0) & overall_effect<0 & ridge_lasso == 0, gsub("\\_", " ",short_var), "")
-  ) %>% 
+  ) %>%
   ungroup() %>%
-  select(-label) 
+  select(-label)
 # Merge in x,y grid positions.
 regional_models_trump  <- regional_models_trump %>%
-  left_join(trump_data %>% 
-              select(state_abbr, gridX, gridY) %>% 
-              group_by(state_abbr) %>% summarise(x=first(gridX), y=first(gridY)) %>% ungroup(), 
+  left_join(trump_data %>%
+              select(state_abbr, gridX, gridY) %>%
+              group_by(state_abbr) %>% summarise(x=first(gridX), y=first(gridY)) %>% ungroup(),
           by=c("region"="state_abbr"))  
 
 # Plot
 # Net-Trump. For shift as outcome, change "filter(outcome==<name>)" on line 6.
-regional_models_trump %>% 
+regional_models_trump %>%
   mutate(
     observed_pos=if_else(observed>0 & is_effect==1, map_scale(abs(observed),0, max_observed,0.2,1),0),
     observed_neg=if_else(observed<0 & is_effect==1, map_scale(abs(observed),0, max_observed,0.2,1),0)
   ) %>%
-  filter(outcome=="net_trump") %>% 
+  filter(outcome=="net_trump") %>%
   ggplot(aes(x=row,y=ridge_lasso))+
   geom_rect(aes(xmin="pop_density", xmax="degree_educated",ymin=-0.8,ymax=1.8), fill="#f0f0f0",colour="#f0f0f0", size=10)+
   geom_point(aes(x=row, y=ridge_lasso, colour=theme, alpha=observed_neg), pch=21, size=1.5, stroke=0.75)+
