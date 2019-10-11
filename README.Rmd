@@ -121,9 +121,9 @@ trump_data <- st_read("./data/trump.geojson", crs=2163)
 
 ![Plot summarising how population distributes amongst administrative geographies.](./figures/admin_geogs.png)
 
-We treat as similar US counties and states and GB LADs and Government Office Regions (GORs). Since this administrative geography determines the hierarchical structure used in our data analysis, it is worth quickly inspecting how both populations are distributed amongst these geographies.
+We treat as similar US counties and states and GB LADs and Government Office Regions (GORs). Since this administrative geography determines the hierarchical structure used in our data analysis, it is worth quickly inspecting how both populations are distributed amongst these geographies. Code for this analysis can be viewed at this position of the repo's [READE.Rmd](README.Rmd) file.
 
-```{r, admin_geog, eval=FALSE}
+```{r, admin_geog, eval=FALSE, echo=FALSE}
 # Generate statistics summarising county-level population size.
 admin_geog <- trump_data %>% 
   group_by(state_abbr) %>% 
@@ -178,9 +178,9 @@ admin_geog %>%
 
 ![Plot of net-Leave, net-Trump and shift-Trump votes.](./figures/choropleths.png)
 
-We consider how the _net-Leave_, _net-Trump_ and _shift-Trump_ vote distributes geographically by generating choropleth maps of the results.
+We consider how the _net-Leave_, _net-Trump_ and _shift-Trump_ vote distributes geographically by generating choropleth maps of the results. Code for generating the maps can be viewed at this position of the repo's [READE.Rmd](README.Rmd) file.
 
-```{r, result_choropleths, eval=FALSE}
+```{r, result_choropleths, eval=FALSE, echo=FALSE}
 # Choropleth of Net-Leave
 ggplot()+
   geom_sf(data=brexit_data, aes(fill=net_leave), colour="#bdbdbd", size=0.05)+
@@ -220,9 +220,9 @@ source("./src/mutlilevel_helper_functions.R")
 ![Plots of univariate random slope models on net-Leave.](./figures/brexit_multilevel.png)
 
 
-Compute multilevel models and summary statistics for interrogating regional scale and effects in the Brexit datasets.
+Compute multilevel models and summary statistics for interrogating regional scale and effects in the Brexit datasets. Code for generating the models can be viewed at this position of the repo's [READE.Rmd](README.Rmd) file.
 
-```{r, brexit_multilevel_data, eval=FALSE}
+```{r, brexit_multilevel_data, eval=FALSE, echo=FALSE}
 # Censor household income variable and standardise explanatory variables (for charting).
 brexit_multilevel <- brexit_data %>% 
   # Censor household income variable for City of London rather than remove entirely.
@@ -255,9 +255,9 @@ summary_fitted <- bind_rows(x_vars$var %>%
 ```
 
 
-Plot multilevel Brexit models.
+Plot multilevel Brexit models.  Code for generating the model plots can be viewed at this position of the repo's [READE.Rmd](README.Rmd) file.
 
-```{r, brexit_multilevel_plot, eval=FALSE}
+```{r, brexit_multilevel_plot, eval=FALSE, echo=FALSE}
 # Create factor variable with variable theme for ordering and charting -- also used for plotting multivariate models. 
 var_theme <- tibble(var=c("pop_density", "older_adults", "foreign_born","manufacturing_loss", "leisure_hospitality", "transport_trade_utilities","not_good_health", "household_income",  "degree_educated"),
                     short_var=c("p-d","old","for", "man", "lei", "trd", "ngh", "inc","deg"),
@@ -304,9 +304,9 @@ summary_fitted %>%
 
 ![Plots of univariate random slope models on net-Leave.](./figures/trump_multilevel.png)
 
-Compute multilevel models and summary statistics.
+Compute multilevel models and summary statistics.  Code for generating the models can be viewed at this position of the repo's [READE.Rmd](README.Rmd) file.
 
-```{r, trump_multilevel_data, eval=FALSE}
+```{r, trump_multilevel_data, eval=FALSE, echo=FALSE}
 # Standardise explanatory variables.
 trump_multilevel <- trump_data %>% 
   mutate_at(vars(degree_educated:pop_density),funs((.-mean(., na.rm=TRUE))/sd(., na.rm=TRUE) ))
@@ -345,9 +345,9 @@ summary_fitted_shift <- bind_rows(x_vars$var %>%
                               )
 ```
 
-Plot multilevel Trump models.
+Plot multilevel Trump models.  Code for generating the model plots can be viewed at this position of the repo's [READE.Rmd](README.Rmd) file.
 
-```{r, trump_multilevel_plots, eval=FALSE}
+```{r, trump_multilevel_plots, eval=FALSE, echo=FALSE}
 # Create factor variable with variable theme for ordering and charting -- also used for plotting multivariate models.
 var_theme <- tibble(var=c("pop_density", "older_adults", "foreign_born","manufacturing_loss", "leisure_hospitality", "transport_trade_utilities","poverty", "household_income",  "degree_educated"),
                     short_var=c("p-d","old","for", "man", "lei", "trd", "pov", "inc","deg"),
@@ -438,9 +438,9 @@ source("./src/penalised_helper_functions.R")
 
 ### Prep data for global penalised regression
 
-Before generating the penalised regression models we need to create dummy variables representing subnational controls following [Essletzbichler et al. (2018)](https://academic.oup.com/cjres/article-abstract/11/1/73/4821297) -- for GB we create controls for England, Wales and for US controls representing the nine US Divisions. We also need to z-score standardise our explanatory variables.
+Before generating the penalised regression models we need to create dummy variables representing subnational controls following [Essletzbichler et al. (2018)](https://academic.oup.com/cjres/article-abstract/11/1/73/4821297) -- for GB we create controls for England, Wales and for US controls representing the nine US Divisions. We also need to z-score standardise our explanatory variables.  Code can be viewed at this position of the repo's [READE.Rmd](README.Rmd) file.
 
-```{r, penalised_data, eval=FALSE}
+```{r, penalised_data, eval=FALSE, echo=FALSE}
 # Create data frame of dummy variables and merge -- Brexit.
 temp <- brexit_data %>% 
   mutate(row_number=1:nrow(.)) %>%
@@ -478,7 +478,9 @@ st_geometry(global_data_trump) <- NULL
 
 ### Generate global penalised regression models (takes a while to execute)
 
-```{r, penalised_model_builds, eval=FALSE}
+ Code can be viewed at this position of the repo's [READE.Rmd](README.Rmd) file.
+
+```{r, penalised_model_builds, eval=FALSE, echo=FALSE}
 # Vector of ridge --> lasso penalties to iterate over.
 ridge_lasso <- c(0,0.25,0.5,0.75,1)
 
@@ -542,7 +544,9 @@ rm(global_models_trump_subnat_controls)
 
 ### Plot global penalised regression models for sensitivity analysis
 
-```{r, penalised_model_plots, eval=FALSE}
+ Code can be viewed at this position of the repo's [READE.Rmd](README.Rmd) file.
+
+```{r, penalised_model_plots, eval=FALSE, echo=FALSE}
 # Brexit
 # Create factor variable with variable theme for ordering and charting. 
 var_theme <- tibble(var=c("pop_density","manufacturing_loss","transport_trade_utilities","leisure_hospitality", "older_adults", "foreign_born", "not_good_health", "household_income", "degree_educated"),
@@ -715,10 +719,10 @@ global_models_trump %>%
 
 ### Prep data for regional penalised regression
 
-We need to z-score standardise our variables, but this time do so per region (GB GOR and US state) since we build region-specific models. Additionally, for regions that contain too few observations (LADs or counties) for parametric assumptions to hold, we borrow from neighbouring regions, defined by straight-line distances between LAD/county centroids.
+We need to z-score standardise our variables, but this time do so per region (GB GOR and US state) since we build region-specific models. Additionally, for regions that contain too few observations (LADs or counties) for parametric assumptions to hold, we borrow from neighbouring regions, defined by straight-line distances between LAD/county centroids.  Code can be viewed at this position of the repo's [READE.Rmd](README.Rmd) file.
 
 
-```{r, penalised_regional_data, eval=FALSE}
+```{r, penalised_regional_data, eval=FALSE, echo=FALSE}
 # Brexit
 # CRS OSGB
 brexit_data <- st_transform(brexit_data, crs=27700)
@@ -820,7 +824,8 @@ x_vars_trump <- regional_models_trump %>% group_by(row) %>% summarise() %>% ungr
 
 ### Do regional penalised regression (takes 60mins+ to execute)
 
-```{r, penalised_regional_model_builds, eval=FALSE}
+Code can be viewed at this position of the repo's [READE.Rmd](README.Rmd) file.
+```{r, penalised_regional_model_builds, eval=FALSE, echo=FALSE }
 # Helper function for tranforming region data.
 get_data_transformed <- function(data, ids) {
   return(data %>% filter(row %in% ids) %>%
@@ -869,8 +874,9 @@ regional_models_trump <- regional_models_trump  %>%  bind_rows(
 
 ### Plot regional penalised regression models for sensitivity analysis
 
+ Code can be viewed at this position of the repo's [READE.Rmd](README.Rmd) file.
 
-```{r, penalised_regional_model_plots, eval=FALSE}
+```{r, penalised_regional_model_plots, eval=FALSE, echo=FALSE}
 # Brexit
 # Create factor variable with variable theme for ordering and charting. 
 var_theme <- tibble(var=c("pop_density","manufacturing_loss","transport_trade_utilities","leisure_hospitality", "older_adults", "foreign_born", "not_good_health", "household_income", "degree_educated"),
