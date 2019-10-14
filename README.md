@@ -292,7 +292,7 @@ neighbouring regions, defined by straight-line distances between
 LAD/county centroids. Code can be viewed at this position of the repo’s
 [READE.Rmd](README.Rmd) file.
 
-### Do regional penalised regression (takes 60mins+ to execute)
+### Do regional penalised regression (takes some time to execute)
 
 Code can be viewed at this position of the repo’s
 [READE.Rmd](README.Rmd) file.
