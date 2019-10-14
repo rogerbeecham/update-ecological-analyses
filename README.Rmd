@@ -822,7 +822,7 @@ states$state_abbr <- as.character(states$state_abbr)
 x_vars_trump <- regional_models_trump %>% group_by(row) %>% summarise() %>% ungroup()
 ```
 
-### Do regional penalised regression (takes 60mins+ to execute)
+### Do regional penalised regression (takes some time to execute)
 
 Code can be viewed at this position of the repo's [READE.Rmd](README.Rmd) file.
 ```{r, penalised_regional_model_builds, eval=FALSE, echo=FALSE }
