@@ -1,11 +1,13 @@
 *Regionally-structured explanations behind area-level populism: An
 update to recent ecological analyses*
+[![DOI](https://zenodo.org/badge/178076172.svg)](https://zenodo.org/badge/latestdoi/178076172)
 ================
 *Roger Beecham*
 
-This repository contains additional code and material for our paper
-*Regionally-structured explanations behind area-level populism: An
-update to recent ecological analyses*.
+This repository contains additional code and material for our *PLOS One*
+paper [*Regionally-structured explanations behind area-level populism:
+An update to recent ecological
+analyses*](https://doi.org/10.1371/journal.pone.0229974).
 
 The data in this repository (found in [data/](data/)) is assembled from:
 
