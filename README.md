@@ -1,5 +1,5 @@
 *Regionally-structured explanations behind area-level populism: An
-update to recent ecological analyses*
+update to recent ecological analyses* [![DOI](https://zenodo.org/badge/178076172.svg)](https://zenodo.org/badge/latestdoi/178076172)
 ================
 *Roger Beecham*
 
