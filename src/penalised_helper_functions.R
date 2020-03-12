@@ -1,6 +1,6 @@
 # penalised_helper_functions
 #
-# Author: Removed for peer review
+# Author: Roger Beecham
 ###############################################################################
 
 get_region_neighbours <- function(data, region) {

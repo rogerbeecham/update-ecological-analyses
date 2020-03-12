@@ -3,7 +3,7 @@ update to recent ecological analyses*
 ================
 *Roger Beecham*
 
-This repository contains all material for our paper
+This repository contains assitional code and material for our paper
 *Regionally-structured explanations behind area-level populism: An
 update to recent ecological analyses*.
 
@@ -34,8 +34,9 @@ The data in this repository (found in [data/](data/)) is assembled from:
 
 This repository contains:
 
-  - [README.md](README.md) : This file, which details the data analysis,
-    explains the code and augments material appearing in the paper.
+  - [README.md](README.md) : This file, which provides code and detail
+    around the data analysis that is additional to that appearing in the
+    paper.
   - [src/](src/) : R files, introduced below, with more subtantial code
     chunks or with helper functions.
   - [figures/](figures/) : Figures generated from the code used in this
@@ -52,26 +53,24 @@ library(sf)                     # for working with geospatial data
 library(lme4)                   # for multilevel modelling
 library(piecewiseSEM)           # for multilevel modelling diagnostics
 library(glmnet)                 # for penalised regression
-```
 
-We also need the development version of `ggplot2` for generating
-choropleth maps and can be installed with
-`devtools::install_github(<package_name>)`:
-
-``` r
-library(ggplot2)      # to install, run devtools::install_github("tidyverse/ggplot2")
 # Set ggplot2 theme_minimal().
 theme_set(theme_minimal())
 ```
 
 ## Load data
 
-First, load the Brexit dataset, stored as a `geojson` file in
-[/data](/data). Using `glance(<df_name>)`, notice that it consists of
-380 observations (Local Authority Districts – LADs) and 19 variables.
-These are listed for a sample LAD in the block below. Vote data are not
-published at LAD-level for Northern Ireland and so we analyse the 380
-LADs in Great Britain only.
+A script for processing the Census and Boundary data is in the
+[src/](src/) folder (`data_processing.R`). Calling this script writes
+out processed files separately for GB and US as `.geojson` to the
+[/data](/data) folder.
+
+In the code below we first load the Brexit dataset. Using
+`glance(<df_name>)`, notice that it consists of 380 observations (Local
+Authority Districts – LADs) and 19 variables. These are listed for a
+sample LAD in the block below. Vote data are not published at LAD-level
+for Northern Ireland and so we analyse the 380 LADs in Great Britain
+only.
 
 ``` r
 # Read in data.

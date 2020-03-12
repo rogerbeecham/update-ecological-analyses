@@ -1,6 +1,6 @@
 # multilevel_helper_functions
 #
-# Author: Removed for peer review
+# Author: Roger Beecham
 ###############################################################################
 
 library(lme4)                  
